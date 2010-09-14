@@ -29,7 +29,6 @@ module Jammit
 
     # CSS asset-embedding regexes for URL rewriting.
     EMBED_DETECTOR  = /url\(['"]?([^\s)]+\.[a-z]+)(\?\d+)?['"]?\)/
-    EMBEDDABLE      = /[\A\/]embed\//
     EMBED_REPLACER  = /url\(__EMBED__(.+?)(\?\d+)?\)/
 
     # MHTML file constants.
@@ -211,18 +210,27 @@ module Jammit
     end
 
     # An asset is valid for embedding if it exists, is less than 32K, and is
-    # stored somewhere inside of a folder named "embed". IE does not support
-    # Data-URIs larger than 32K, and you probably shouldn't be embedding assets
-    # that large in any case. Because we need to check the base64 length here,
+    # stored somewhere inside of a folder with a name matching one of the 
+    # embeddable patterns. IE does not support Data-URIs larger than 32K, 
+    # and you probably shouldn't be embedding assets that large in any case. 
+    # Because we need to check the base64 length here,
     # save it so that we don't have to compute it again later.
     def embeddable?(asset_path, variant)
       font = EMBED_FONTS.include?(asset_path.extname)
       return false unless variant
-      return false unless asset_path.to_s.match(EMBEDDABLE) && asset_path.exist?
+      return false unless embeddable_path?(asset_path) && asset_path.exist?
       return false unless EMBED_EXTS.include?(asset_path.extname)
       return false unless font || encoded_contents(asset_path).length < MAX_IMAGE_SIZE
       return false if font && variant == :mhtml
       return true
+    end
+    
+    def embeddable_path?(path)
+      embeddable_patterns.any? { |ep| path.to_s.match(ep) }
+    end
+    
+    def embeddable_patterns
+      @embeddable_patterns ||= Jammit.embeddable_prefixes.map { |p| /[\A\/]#{p}\// }
     end
 
     # Return the Base64-encoded contents of an asset on a single line.

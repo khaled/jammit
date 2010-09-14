@@ -29,6 +29,8 @@ module Jammit
   # Extension matchers for JavaScript and JST, which need to be disambiguated.
   JS_EXTENSION          = /\.js\Z/
   DEFAULT_JST_EXTENSION = "jst"
+  
+  DEFAULT_EMBEDDABLE_PREFIXES = ["embed"]
 
   # Jammit raises a @PackageNotFound@ exception when a non-existent package is
   # requested by a browser -- rendering a 404.
@@ -47,8 +49,8 @@ module Jammit
 
   class << self
     attr_reader :configuration, :template_function, :template_namespace,
-                :embed_assets, :package_assets, :compress_assets, :gzip_assets,
-                :package_path, :mhtml_enabled, :include_jst_script, :config_path,
+                :embed_assets, :embeddable_prefixes, :package_assets, :compress_assets, 
+                :gzip_assets, :package_path, :mhtml_enabled, :include_jst_script, :config_path,
                 :javascript_compressor, :compressor_options, :css_compressor_options,
                 :template_extension, :template_extension_matcher
   end
@@ -66,6 +68,7 @@ module Jammit
     @configuration          = symbolize_keys(conf)
     @package_path           = conf[:package_path] || DEFAULT_PACKAGE_PATH
     @embed_assets           = conf[:embed_assets] || conf[:embed_images]
+    @embeddable_prefixes    = conf[:embeddable_prefixes] || DEFAULT_EMBEDDABLE_PREFIXES
     @compress_assets        = !(conf[:compress_assets] == false)
     @gzip_assets            = !(conf[:gzip_assets] == false)
     @mhtml_enabled          = @embed_assets && @embed_assets != "datauri"
